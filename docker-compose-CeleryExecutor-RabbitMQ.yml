@@ -1,0 +1,93 @@
+version: '2.1'
+services:
+
+    rabbitmq:
+      image: 'rabbitmq:3.6-management'
+      restart: always
+      environment:
+        - RABBITMQ_DEFAULT_USER=airflow
+        - RABBITMQ_DEFAULT_PASS=airflow
+        - RABBITMQ_DEFAULT_VHOST=airflow
+
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        # Uncomment these lines to persist data on the local filesystem.
+        #     - PGDATA=/var/lib/postgresql/data/pgdata
+        # volumes:
+        #     - ./pgdata:/var/lib/postgresql/data/pgdata
+
+    webserver:
+        image: cjeffers/docker-airflow
+        restart: always
+        depends_on:
+            - postgres
+            - rabbitmq
+        environment:
+            - FERNET_KEY=47BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - CELERY_BROKER=RabbitMQ
+            - CELERY_RESULT_BACKEND=RabbitMQ
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+        ports:
+            - "8080:8080"
+        command: webserver
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+
+    flower:
+        image: cjeffers/docker-airflow
+        restart: always
+        depends_on:
+            - rabbitmq
+        environment:
+            - EXECUTOR=Celery
+            - CELERY_BROKER=RabbitMQ
+            - CELERY_RESULT_BACKEND=RabbitMQ
+        ports:
+            - "5555:5555"
+        command: flower
+
+    scheduler:
+        image: cjeffers/docker-airflow
+        restart: always
+        depends_on:
+            - webserver
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+        environment:
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - CELERY_BROKER=RabbitMQ
+            - CELERY_RESULT_BACKEND=RabbitMQ
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+        command: scheduler
+
+    worker:
+        image: cjeffers/docker-airflow
+        restart: always
+        depends_on:
+            - scheduler
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+        environment:
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - CELERY_BROKER=RabbitMQ
+            - CELERY_RESULT_BACKEND=RabbitMQ
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+        command: worker

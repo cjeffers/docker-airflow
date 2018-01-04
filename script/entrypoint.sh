@@ -86,10 +86,10 @@ wait_for_celery_broker() {
 get_celery_broker_url() {
   case "$CELERY_BROKER" in
     Redis)
-      return "redis://$REDIS_PREFIX$REDIS_HOST:$REDIS_PORT/1"
+      echo "redis://$REDIS_PREFIX$REDIS_HOST:$REDIS_PORT/1"
       ;;
     RabbitMQ)
-      return "amqp://$RABBITMQ_USER:$RABBITMQ_PASSWORD@$RABBITMQ_HOST:$RABBITMQ_PORT/$RABBITMQ_VHOST"
+      echo "amqp://$RABBITMQ_USER:$RABBITMQ_PASSWORD@$RABBITMQ_HOST:$RABBITMQ_PORT/$RABBITMQ_VHOST"
       ;;
     *)
       echo >&2 "$(date) - unrecognized celery broker: $CELERY_BROKER"
@@ -101,10 +101,10 @@ get_celery_broker_url() {
 get_celery_result_backend() {
   case "$CELERY_RESULT_BACKEND" in
     Postgres)
-      return "db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+      echo "db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
       ;;
     RabbitMQ)
-      return "amqp://$RABBITMQ_USER:$RABBITMQ_PASS@$RABBITMQ_HOST:$RABBITMQ_PORT/$RABBITMQ_VHOST"
+      echo "amqp://$RABBITMQ_USER:$RABBITMQ_PASS@$RABBITMQ_HOST:$RABBITMQ_PORT/$RABBITMQ_VHOST"
       ;;
     *)
       echo >&2 "$(date) - unrecognized celery result backend: $CELERY_RESULT_BACKEND"
